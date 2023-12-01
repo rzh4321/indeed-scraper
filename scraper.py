@@ -8,27 +8,42 @@ import os
 
 def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sort='relevance', filename="results.xls"):
     """
-    desired_characs = ['titles', 'companies', 'links', 'date_listed', 'type']
+    desired_characs = ['title', 'company', 'links', 'date_listed', 'type']
     fromage = 1,3,7,14
     sort = relevance,date
     """
     list_of_jobs_ul = get_indeed_soup(search, location, fromage, sort)
+    if not list_of_jobs_ul:
+        raise Exception(f'NO JOBS SEARCH WITH SEARCH "{search}"')
     extract_job_information_indeed(list_of_jobs_ul, desired_characs)
 
 def get_indeed_soup(search, location, fromage, sort):
     params = {'q' : search, 'l' : location, 'fromage' : fromage, 'sort' : sort}
     url = ('https://www.indeed.com/jobs?' + urllib.parse.urlencode(params))
+    print('url is ', url)
     scraper = cloudscraper.create_scraper()
     page = scraper.get(url)
     soup = BeautifulSoup(page.text, "html.parser")
-    list_of_jobs = soup.select('#mosaic-provider-jobcards ul')[0]
-    return list_of_jobs
+    list_of_jobs = soup.select('#mosaic-provider-jobcards ul')
+    return list_of_jobs[0] if list_of_jobs else None
 
 def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
+    cols = desired_characs
+    extracted_info = [[] for i in range(len(desired_characs))]
+
+
+
     for job_li in list_of_jobs_ul:
-        title = extract_job_title_indeed(job_li)
-        if title:
-            print(title)
+        if 'title' in desired_characs:
+            titles = extracted_info[desired_characs.index('title')]
+            title = extract_job_title_indeed(job_li)
+            if title:
+                titles.append(title)
+    # print('cols is ', cols)
+    # print('extracted info is ', extracted_info)
+    print(f'titles are {extracted_info[0]}')
+    # print(f'len of titles is {len(extracted_info[0])}')
+
 
 def extract_job_title_indeed(job_li):
     job_title_elements = job_li.select('.jobTitle span')
@@ -39,11 +54,10 @@ def extract_job_title_indeed(job_li):
 ## ==========================================================================================
 def find_jobs_from_ziprecruiter(search, location, desired_characs, days='anytime', radius='any', filename="results.xls"):
     """
-    desired_characs = ['titles', 'companies', 'links', 'type']
+    desired_characs = ['title', 'company', 'links', 'type']
     days=30,10,5,1
     radius=5,10,25,50,100
     """
-    location_of_driver = os.getcwd()
     driver = webdriver.Chrome()
     list_of_jobs = get_ziprecruiter_soup(search, location, days, radius, driver)
     print(f'len of list of jobs if {len(list_of_jobs)}')
@@ -55,7 +69,6 @@ def get_ziprecruiter_soup(search, location, days, radius, driver):
     url = ('https://www.ziprecruiter.com/jobs-search?' + urllib.parse.urlencode(params))
     print('URL IS: ', url, '\n\n\n')
     driver.get(url)
-    # list_of_jobs = driver.find_element_by_css_selector('[data-testid="job-results-root"]')
     page = driver.page_source
     soup = BeautifulSoup(page, "html.parser")
     list_of_jobs = soup.find(attrs={"data-testid": "job-results-root"})
@@ -69,8 +82,7 @@ def extract_job_information_ziprecruiter(list_of_jobs, desired_characs):
             title = extract_job_title_ziprecruiter(job_info)
             if title:
                 print(title)
-            else:
-                print('NO TITLE. job_div is ', job_div, '==================================================================\n\n')
+        
 
 def extract_job_title_ziprecruiter(job_info):
     job_title_elements = job_info.select('h2')
@@ -78,6 +90,6 @@ def extract_job_title_ziprecruiter(job_info):
         return job_title_elements[0].text.strip()
 
 
-desired_characs = ['titles', 'companies', 'links', 'date_listed']
-# find_jobs_from_indeed('indeed', 'engineer', 'brooklyn', desired_characs)
-find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
+desired_characs = ['title', 'company', 'links', 'date_listed']
+find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
+# find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
