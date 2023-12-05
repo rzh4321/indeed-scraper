@@ -39,16 +39,29 @@ def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
             title = extract_job_title_indeed(job_li)
             if title:
                 titles.append(title)
+        if 'company' in desired_characs:
+            companies = extracted_info[desired_characs.index('company')]
+            company = extract_company_indeed(job_li)
+            if company:
+                companies.append(company)
     # print('cols is ', cols)
     # print('extracted info is ', extracted_info)
-    print(f'titles are {extracted_info[0]}')
+    # print(f'titles are {extracted_info[0]}')
     # print(f'len of titles is {len(extracted_info[0])}')
+    # print(f'companies are {extracted_info[1]}')
+    # print(f'len of companies is {len(extracted_info[1])}')
+
 
 
 def extract_job_title_indeed(job_li):
     job_title_elements = job_li.select('.jobTitle span')
     if job_title_elements:
         return job_title_elements[0].text.strip()
+    
+def extract_company_indeed(job_li):
+    company_elements = job_li.select('[data-testid="company-name"]')
+    if company_elements:
+        return company_elements[0].text.strip()
 
 
 ## ==========================================================================================
@@ -75,21 +88,45 @@ def get_ziprecruiter_soup(search, location, days, radius, driver):
     return list_of_jobs
 
 def extract_job_information_ziprecruiter(list_of_jobs, desired_characs):
+    cols = desired_characs
+    extracted_info = [[] for i in range(len(desired_characs))]
+
     for job_div in list_of_jobs:
         job_article = job_div.find('article')
         if job_article:
             job_info = job_article.find('div').find('div')
-            title = extract_job_title_ziprecruiter(job_info)
-            if title:
-                print(title)
+            if 'title' in desired_characs:
+                titles = extracted_info[desired_characs.index('title')]
+                title = extract_job_title_ziprecruiter(job_info)
+                if title:
+                    titles.append(title)
+            if 'company' in desired_characs:
+                companies = extracted_info[desired_characs.index('company')]
+                company = extract_company_ziprecruiter(job_info)
+                if company:
+                    companies.append(company)
+
+
+        
+    # print('cols is ', cols)
+    # print('extracted info is ', extracted_info)
+    print(f'titles are {extracted_info[0]}')
+    print(f'len of titles is {len(extracted_info[0])}')
+    print(f'companies are {extracted_info[1]}')
+    print(f'len of companies is {len(extracted_info[1])}')
         
 
 def extract_job_title_ziprecruiter(job_info):
     job_title_elements = job_info.select('h2')
     if job_title_elements:
         return job_title_elements[0].text.strip()
+    
+def extract_company_ziprecruiter(job_info):
+    companies_a_tag = job_info.select('h2 + div a')
+    if companies_a_tag:
+        return companies_a_tag[0].text.strip()
 
 
 desired_characs = ['title', 'company', 'links', 'date_listed']
-find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
-# find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
+#find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
+find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
