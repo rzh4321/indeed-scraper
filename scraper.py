@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 import urllib
 import cloudscraper
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support.ui import WebDriverWait
 import os
+import re
 
 def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sort='relevance', filename="results.xls"):
     """
@@ -14,8 +15,8 @@ def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sor
     """
     list_of_jobs_ul = get_indeed_soup(search, location, fromage, sort)
     if not list_of_jobs_ul:
-        raise Exception(f'NO JOBS SEARCH WITH SEARCH "{search}"')
-    extract_job_information_indeed(list_of_jobs_ul, desired_characs)
+        raise Exception(f'NO RESULTS WITH SEARCH "{search}"')
+    return extract_job_information_indeed(list_of_jobs_ul, desired_characs)
 
 def get_indeed_soup(search, location, fromage, sort):
     params = {'q' : search, 'l' : location, 'fromage' : fromage, 'sort' : sort}
@@ -44,18 +45,31 @@ def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
             company = extract_company_indeed(job_li)
             if company:
                 companies.append(company)
-    # print('cols is ', cols)
-    # print('extracted info is ', extracted_info)
-    # print(f'titles are {extracted_info[0]}')
-    # print(f'len of titles is {len(extracted_info[0])}')
-    # print(f'companies are {extracted_info[1]}')
-    # print(f'len of companies is {len(extracted_info[1])}')
+        if 'date_listed' in desired_characs:
+            dates = extracted_info[desired_characs.index('date_listed')]
+            date = extract_date_indeed(job_li)
+            if date:
+                dates.append(date)
 
+    return extracted_info
+
+
+def extract_date_indeed(job_li):
+    date = job_li.select_one('.date')
+    pattern = r"(Posted|Active)"
+    if date:
+        match = re.search(pattern, date.text)
+        
+        if match:
+            parts = date.text.split(match.group(1))
+            cleaned_string = ' '.join(parts).strip()
+            return cleaned_string
 
 
 def extract_job_title_indeed(job_li):
     job_title_elements = job_li.select('.jobTitle span')
     if job_title_elements:
+        print(job_title_elements[0].text.strip())
         return job_title_elements[0].text.strip()
     
 def extract_company_indeed(job_li):
@@ -128,5 +142,19 @@ def extract_company_ziprecruiter(job_info):
 
 
 desired_characs = ['title', 'company', 'links', 'date_listed']
-#find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
-find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
+extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
+titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
+while len(titles) != len(companies) or len(companies) != len(dates):
+    extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
+    titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
+
+#find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
+    
+
+# print('cols is ', cols)
+# print('extracted info is ', extracted_info)
+# print(f'titles are {extracted_info[0]}')
+print(f'len of titles is {len(extracted_info[0])}')
+# print(f'companies are {extracted_info[1]}')
+print(f'len of companies is {len(extracted_info[1])}')
+print(f'len of dates is {len(extracted_info[3])}')
