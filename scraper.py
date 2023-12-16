@@ -21,7 +21,6 @@ def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sor
 def get_indeed_soup(search, location, fromage, sort):
     params = {'q' : search, 'l' : location, 'fromage' : fromage, 'sort' : sort}
     url = ('https://www.indeed.com/jobs?' + urllib.parse.urlencode(params))
-    print('url is ', url)
     scraper = cloudscraper.create_scraper()
     page = scraper.get(url)
     soup = BeautifulSoup(page.text, "html.parser")
@@ -50,8 +49,23 @@ def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
             date = extract_date_indeed(job_li)
             if date:
                 dates.append(date)
+        if 'links' in desired_characs:
+            links = extracted_info[desired_characs.index('links')]
+            link = extract_link_indeed(job_li)
+            if link:
+                links.append(link)
+
 
     return extracted_info
+
+def extract_link_indeed(job_li):
+    base_url = 'https://www.indeed.com'
+    link = job_li.select_one('.jobTitle a')
+    if link:
+        relative_url = link['href']
+        absolute_url = urllib.parse.urljoin(base_url, relative_url)
+        return absolute_url
+
 
 
 def extract_date_indeed(job_li):
@@ -69,7 +83,6 @@ def extract_date_indeed(job_li):
 def extract_job_title_indeed(job_li):
     job_title_elements = job_li.select('.jobTitle span')
     if job_title_elements:
-        print(job_title_elements[0].text.strip())
         return job_title_elements[0].text.strip()
     
 def extract_company_indeed(job_li):
@@ -87,7 +100,6 @@ def find_jobs_from_ziprecruiter(search, location, desired_characs, days='anytime
     """
     driver = webdriver.Chrome()
     list_of_jobs = get_ziprecruiter_soup(search, location, days, radius, driver)
-    print(f'len of list of jobs if {len(list_of_jobs)}')
     extract_job_information_ziprecruiter(list_of_jobs, desired_characs)
 
 
@@ -120,7 +132,6 @@ def extract_job_information_ziprecruiter(list_of_jobs, desired_characs):
                 if company:
                     companies.append(company)
 
-
         
     # print('cols is ', cols)
     # print('extracted info is ', extracted_info)
@@ -143,10 +154,16 @@ def extract_company_ziprecruiter(job_info):
 
 desired_characs = ['title', 'company', 'links', 'date_listed']
 extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
-titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
-while len(titles) != len(companies) or len(companies) != len(dates):
+titles, companies, links, dates = extracted_info[0], extracted_info[1], extracted_info[2], extracted_info[3]
+values_set = {len(titles), len(companies), len(links), len(dates)}
+print('values set is ', values_set)
+# make sure each job has all the requested info
+while len(values_set) != 1:
     extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
     titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
+    values_set = {len(titles), len(companies), len(links), len(dates)}
+    print('values set is ', values_set)
+
 
 #find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
     
@@ -157,4 +174,6 @@ while len(titles) != len(companies) or len(companies) != len(dates):
 print(f'len of titles is {len(extracted_info[0])}')
 # print(f'companies are {extracted_info[1]}')
 print(f'len of companies is {len(extracted_info[1])}')
+print(f'len of links is {len(extracted_info[2])}')
+
 print(f'len of dates is {len(extracted_info[3])}')
