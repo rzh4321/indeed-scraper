@@ -6,34 +6,54 @@ from selenium import webdriver
 # from selenium.webdriver.support.ui import WebDriverWait
 import os
 import re
+import pandas as pd
 
-def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sort='relevance', filename="results.xls"):
+def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sort='relevance', filename="results.xlsx"):
     """
     desired_characs = ['title', 'company', 'links', 'date_listed', 'type']
     fromage = 1,3,7,14
     sort = relevance,date
     """
-    list_of_jobs_ul = get_indeed_soup(search, location, fromage, sort)
+    driver = webdriver.Chrome()
+    list_of_jobs_ul = get_indeed_soup(search, location, fromage, sort, driver)
     if not list_of_jobs_ul:
         raise Exception(f'NO RESULTS WITH SEARCH "{search}"')
-    return extract_job_information_indeed(list_of_jobs_ul, desired_characs)
+    extracted_info, jobs_list, num_listings = extract_job_information_indeed(list_of_jobs_ul, desired_characs)
+    titles, companies, links, dates = extracted_info[0], extracted_info[1], extracted_info[2], extracted_info[3]
+    values_set = {len(titles), len(companies), len(links), len(dates)}
+    # make sure each job has all the requested info
+    while len(values_set) != 1:
+        extracted_info, jobs_list, num_listings = extract_job_information_indeed(list_of_jobs_ul, desired_characs)
+        titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
+        values_set = {len(titles), len(companies), len(links), len(dates)}
 
-def get_indeed_soup(search, location, fromage, sort):
+    save_jobs_to_excel(jobs_list, filename)
+    print(f'{num_listings} new job postings retrieved from Indeed. Stored in {filename}.')
+    return extracted_info
+
+def save_jobs_to_excel(jobs_list, filename):
+    jobs = pd.DataFrame(jobs_list)
+    jobs.to_excel(filename)
+
+def get_indeed_soup(search, location, fromage, sort, driver):
     params = {'q' : search, 'l' : location, 'fromage' : fromage, 'sort' : sort}
     url = ('https://www.indeed.com/jobs?' + urllib.parse.urlencode(params))
-    scraper = cloudscraper.create_scraper()
-    page = scraper.get(url)
-    soup = BeautifulSoup(page.text, "html.parser")
-    list_of_jobs = soup.select('#mosaic-provider-jobcards ul')
-    return list_of_jobs[0] if list_of_jobs else None
+    print(f'URL IS {url}')
+    driver.get(url)
+    page = driver.page_source
+    soup = BeautifulSoup(page, "html.parser")
+    # scraper = cloudscraper.create_scraper()
+    # page = scraper.get(url)
+    # soup = BeautifulSoup(page.text, "html.parser")
+    #list_of_jobs = soup.select_one('#mosaic-provider-jobcards > ul')
+    list_of_jobs = soup.select('.css-5lfssm.eu4oa1w0')
+    return list_of_jobs if list_of_jobs else None
 
-def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
+def extract_job_information_indeed(list_of_jobs, desired_characs):
     cols = desired_characs
     extracted_info = [[] for i in range(len(desired_characs))]
 
-
-
-    for job_li in list_of_jobs_ul:
+    for job_li in list_of_jobs:
         if 'title' in desired_characs:
             titles = extracted_info[desired_characs.index('title')]
             title = extract_job_title_indeed(job_li)
@@ -56,7 +76,14 @@ def extract_job_information_indeed(list_of_jobs_ul, desired_characs):
                 links.append(link)
 
 
-    return extracted_info
+    jobs_list = {}
+    
+    for j in range(len(cols)):
+        jobs_list[cols[j]] = extracted_info[j]
+    
+    num_listings = len(extracted_info[0])
+    
+    return extracted_info, jobs_list, num_listings
 
 def extract_link_indeed(job_li):
     base_url = 'https://www.indeed.com'
@@ -92,7 +119,7 @@ def extract_company_indeed(job_li):
 
 
 ## ==========================================================================================
-def find_jobs_from_ziprecruiter(search, location, desired_characs, days='anytime', radius='any', filename="results.xls"):
+def find_jobs_from_ziprecruiter(search, location, desired_characs, days='anytime', radius='any', filename="results.xlsx"):
     """
     desired_characs = ['title', 'company', 'links', 'type']
     days=30,10,5,1
@@ -154,16 +181,6 @@ def extract_company_ziprecruiter(job_info):
 
 desired_characs = ['title', 'company', 'links', 'date_listed']
 extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
-titles, companies, links, dates = extracted_info[0], extracted_info[1], extracted_info[2], extracted_info[3]
-values_set = {len(titles), len(companies), len(links), len(dates)}
-print('values set is ', values_set)
-# make sure each job has all the requested info
-while len(values_set) != 1:
-    extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
-    titles, companies, dates = extracted_info[0], extracted_info[1], extracted_info[3]
-    values_set = {len(titles), len(companies), len(links), len(dates)}
-    print('values set is ', values_set)
-
 
 #find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs)
     

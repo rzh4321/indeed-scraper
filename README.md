@@ -1,6 +1,6 @@
 ## Jobs Scraper
 
-The module scraper.py enables you to web scrape job postings from indeed.com or ziprecruiter.com. Both require the package Beautiful Soup. For ziprecruiter, the Selenium web driver is also required. These can be installed as follows:
+The module scraper.py enables you to web scrape job postings from indeed.com or ziprecruiter.com. Both require the packages Beautiful Soup and Selenium These can be installed as follows:
 
 ```bash
 pip install beautifulsoup4
