@@ -34,7 +34,6 @@ def find_jobs_from_indeed(search, location, desired_characs, fromage='last', sor
 
     save_jobs_to_excel(jobs_list, filename)
     print(f'{num_listings} new job postings retrieved from Indeed. Stored in {filename}.')
-    return extracted_info
 
 def get_indeed_soup(search, location, fromage, sort, driver):
     params = {'q' : search, 'l' : location, 'fromage' : fromage, 'sort' : sort}
@@ -162,7 +161,6 @@ def find_jobs_from_ziprecruiter(search, location, desired_characs, days='anytime
     extracted_info, jobs_list, num_listings = extract_job_information_ziprecruiter(list_of_jobs, desired_characs)
     save_jobs_to_excel(jobs_list, filename)
     print(f'{num_listings} new job postings retrieved from ZipRecruiter. Stored in {filename}.')
-    return extracted_info
 
 def get_ziprecruiter_soup(search, location, days, radius, driver):
     params = {'search' : search, 'location' : location, 'days' : days, 'radius' : radius}
@@ -259,25 +257,3 @@ def extract_company_ziprecruiter(job_info):
     companies_a_tag = job_info.select('h2 + div a')
     if companies_a_tag:
         return companies_a_tag[0].text.strip()
-
-
-# desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
-# extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 'last', 'date')
-
-# desired_characs = ['title', 'company', 'links', 'type', 'salary']
-# extracted_info = find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs, 5, 10)
-    
-
-# print('cols is ', cols)
-# print('extracted info is ', extracted_info)
-# print(f'titles are {extracted_info[0]}')
-# print(f'len of titles is {len(extracted_info[0])}')
-# print(f'companies are {extracted_info[1]}')
-# print(f'len of companies is {len(extracted_info[1])}')
-# print(f'len of links is {len(extracted_info[2])}')
-# print(f'len of types is {len(extracted_info[3])}')
-
-# print(f'len of dates is {len(extracted_info[3])}')
-# print(f'len of salaries is {len(extracted_info[4])}')
-# print(extracted_info[2])
-# print(extracted_info[4])
