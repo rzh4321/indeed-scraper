@@ -261,8 +261,8 @@ def extract_company_ziprecruiter(job_info):
         return companies_a_tag[0].text.strip()
 
 
-desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
-extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 'last', 'date')
+# desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
+# extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 'last', 'date')
 
 # desired_characs = ['title', 'company', 'links', 'type', 'salary']
 # extracted_info = find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs, 5, 10)
@@ -271,11 +271,11 @@ extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 
 # print('cols is ', cols)
 # print('extracted info is ', extracted_info)
 # print(f'titles are {extracted_info[0]}')
-print(f'len of titles is {len(extracted_info[0])}')
+# print(f'len of titles is {len(extracted_info[0])}')
 # print(f'companies are {extracted_info[1]}')
-print(f'len of companies is {len(extracted_info[1])}')
-print(f'len of links is {len(extracted_info[2])}')
-print(f'len of types is {len(extracted_info[3])}')
+# print(f'len of companies is {len(extracted_info[1])}')
+# print(f'len of links is {len(extracted_info[2])}')
+# print(f'len of types is {len(extracted_info[3])}')
 
 # print(f'len of dates is {len(extracted_info[3])}')
 # print(f'len of salaries is {len(extracted_info[4])}')
