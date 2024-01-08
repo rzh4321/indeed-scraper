@@ -21,9 +21,19 @@ find_jobs_from_ziprecruiter() take in several arguments: the search query, locat
 
 ## Examples
 ```python
-desired_characs = ['title', 'company', 'links', 'type']
 """
-Find jobs with search "engineer" in location "brooklyn". The job title, company name, job link, and job type are extracted. Show only postings within the last 5 days and within 10 miles.  
+Find jobs in ZipRecruiter with search "engineer" in location "brooklyn". The job 
+title, company name, job link, job type, and salary are extracted. Show only 
+postings within the last 5 days and located within 10 miles.
 """
+desired_characs = ['title', 'company', 'links', 'type', 'salary']
 extracted_info = find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs, 5, 10)
+
+"""
+Find jobs in Indeed with search "engineer" in location "brooklyn". The job title, 
+company name, job link, post date, and salary are extracted. The age of listing 
+is "last" (default value). The sort parameter is "date" (default is "relevance").
+"""
+desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
+extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 'last', 'date')
 ```

@@ -181,27 +181,46 @@ def extract_job_information_ziprecruiter(list_of_jobs, desired_characs):
     for job_div in list_of_jobs:
         job_article = job_div.find('article')
         if job_article:
+            is_a_job = False
             job_info = job_article.find('div').find('div')
             if 'title' in desired_characs:
                 titles = extracted_info[desired_characs.index('title')]
                 title = extract_job_title_ziprecruiter(job_info)
                 if title:
                     titles.append(title)
+                    is_a_job = True
+
             if 'company' in desired_characs:
                 companies = extracted_info[desired_characs.index('company')]
                 company = extract_company_ziprecruiter(job_info)
                 if company:
                     companies.append(company)
+                elif is_a_job:
+                    companies.append('N/A')
+
             if 'type' in desired_characs:
                 types = extracted_info[desired_characs.index('type')]
                 type = extract_type_ziprecruiter(job_info)
                 if type:
                     types.append(type)
+                elif is_a_job:
+                    types.append('N/A')
+
             if 'links' in desired_characs:
                 links = extracted_info[desired_characs.index('links')]
                 link = extract_link_ziprecruiter(job_info)
                 if link:
                     links.append(link)
+                elif is_a_job:
+                    links.append('N/A')
+
+            if 'salary' in desired_characs:
+                salaries = extracted_info[desired_characs.index('salary')]
+                salary = extract_salary_ziprecruiter(job_info)
+                if salary:
+                    salaries.append(salary)
+                elif is_a_job:
+                    salaries.append('N/A')
 
 
 
@@ -215,15 +234,21 @@ def extract_job_information_ziprecruiter(list_of_jobs, desired_characs):
     
     return extracted_info, jobs_list, num_listings
 
+def extract_salary_ziprecruiter(job_info):
+    pattern = re.compile(r'\s/\s(?:yr|hr)')
+    salary = job_info.find('p', text=pattern)
+    return salary.text
+
 def extract_link_ziprecruiter(job_info):
     link_elements = job_info.select('a')
     if link_elements:
         return link_elements[0]['href']
 
 def extract_type_ziprecruiter(job_info):
-    type_elements = job_info.select('div + p')
-    if type_elements:
-        return type_elements[0].text.strip() 
+    pattern = re.compile(r'^(Per diem|Full-time|Temporary|Contract|Part-time)$')
+    type = job_info.find('p', text=pattern)
+    if type:
+        return type.text
 
 def extract_job_title_ziprecruiter(job_info):
     job_title_elements = job_info.select('h2')
@@ -236,11 +261,11 @@ def extract_company_ziprecruiter(job_info):
         return companies_a_tag[0].text.strip()
 
 
-# desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
-# extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs)
+desired_characs = ['title', 'company', 'links', 'date_listed', 'salary']
+extracted_info = find_jobs_from_indeed('engineer', 'brooklyn', desired_characs, 'last', 'date')
 
-desired_characs = ['title', 'company', 'links', 'type']
-extracted_info = find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs, 5, 10)
+# desired_characs = ['title', 'company', 'links', 'type', 'salary']
+# extracted_info = find_jobs_from_ziprecruiter('engineer', 'brooklyn', desired_characs, 5, 10)
     
 
 # print('cols is ', cols)
